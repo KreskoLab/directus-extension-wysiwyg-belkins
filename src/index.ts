@@ -3,7 +3,15 @@ import { defineAsyncComponent } from 'vue';
 import PreviewSVG from './preview';
 import toolbarDefault from './toolbar-default';
 
-const InterfaceWYSIWYG = defineAsyncComponent(() => import('./interface.vue'));
+/**
+ * Resolve the default export explicitly. `directus-extension build` inlines this dynamic
+ * import as `Promise.resolve().then(() => ns)` where `ns` is a plain `{ default: ... }`
+ * object carrying neither `__esModule` nor `Symbol.toStringTag === 'Module'`. Vue only
+ * unwraps `.default` when one of those markers is present, so handing it the namespace
+ * makes it treat the wrapper itself as the component - no setup, no render, no error,
+ * just an empty comment node where the editor should be.
+ */
+const InterfaceWYSIWYG = defineAsyncComponent(() => import('./interface.vue').then((m) => m.default));
 
 export default defineInterface({
 	id: 'wysiwyg',
