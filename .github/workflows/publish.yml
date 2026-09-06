@@ -1,0 +1,88 @@
+name: Publish to npm
+
+on:
+  # Publishing is driven by GitHub Releases: cut a release tagged `v<version>`
+  # matching package.json and this workflow ships that exact commit.
+  release:
+    types: [published]
+  # Manual escape hatch, e.g. to re-run a failed publish or push a one-off tag.
+  workflow_dispatch:
+    inputs:
+      dist-tag:
+        description: npm dist-tag to publish under
+        required: true
+        default: latest
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
+
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      # `dist/` is gitignored, so the tarball's only real content is built here.
+      - name: Build
+        run: npm run build
+
+      - name: Validate extension manifest
+        run: npm run validate
+
+      - name: Resolve version and dist-tag
+        id: meta
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if [ "${{ github.event_name }}" = "release" ]; then
+            # Release tags are `v1.2.3`; refuse to publish if the tag and the
+            # manifest disagree, which otherwise silently ships the wrong version.
+            tag_version="${GITHUB_REF_NAME#v}"
+
+            if [ "$tag_version" != "$version" ]; then
+              echo "::error::Release tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
+              exit 1
+            fi
+
+            if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+              dist_tag=next
+            else
+              dist_tag=latest
+            fi
+          else
+            dist_tag="${{ inputs.dist-tag }}"
+          fi
+
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          echo "dist-tag=$dist_tag" >>"$GITHUB_OUTPUT"
+          echo "Publishing $version under dist-tag $dist_tag"
+
+      - name: Publish
+        run: npm publish --provenance --access public --tag "${{ steps.meta.outputs.dist-tag }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          {
+            echo "Published \`directus-extension-wysiwyg-belkins@${{ steps.meta.outputs.version }}\` under dist-tag \`${{ steps.meta.outputs.dist-tag }}\`."
+            echo ""
+            echo "https://www.npmjs.com/package/directus-extension-wysiwyg-belkins/v/${{ steps.meta.outputs.version }}"
+          } >>"$GITHUB_STEP_SUMMARY"

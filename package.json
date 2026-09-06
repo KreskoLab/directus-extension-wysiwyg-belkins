@@ -13,6 +13,14 @@
 		"rich-text"
 	],
 	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/KreskoLab/directus-extension-wysiwyg-belkins.git"
+	},
+	"homepage": "https://github.com/KreskoLab/directus-extension-wysiwyg-belkins#readme",
+	"bugs": {
+		"url": "https://github.com/KreskoLab/directus-extension-wysiwyg-belkins/issues"
+	},
 	"files": [
 		"dist",
 		"LICENSE"
