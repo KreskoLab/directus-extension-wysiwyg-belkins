@@ -4,7 +4,7 @@ import { useStores } from '@directus/extensions-sdk';
 import Editor from '@tinymce/tinymce-vue';
 import { cloneDeep, isEqual } from 'lodash';
 import tinymce from 'tinymce/tinymce';
-import { ComponentPublicInstance, computed, onMounted, ref, toRefs, watch } from 'vue';
+import { ComponentPublicInstance, computed, ref, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import getEditorStyles from './get-editor-styles';
 import toolbarDefault from './toolbar-default';
@@ -405,49 +405,55 @@ function setFocus(val: boolean) {
 	}
 }
 
-onMounted(() => {
-	tinymce.addI18n(locale.value, {
-		Undo: t('wysiwyg_options.undo'),
-		Redo: t('wysiwyg_options.redo'),
-		Bold: t('wysiwyg_options.bold'),
-		Italic: t('wysiwyg_options.italic'),
-		Underline: t('wysiwyg_options.underline'),
-		Strikethrough: t('wysiwyg_options.strikethrough'),
-		Subscript: t('wysiwyg_options.subscript'),
-		Superscript: t('wysiwyg_options.superscript'),
-		'Font {0}': `${t('wysiwyg_options.fontselect')} {0}`,
-		'Font size {0}': `${t('wysiwyg_options.fontsizeselect')} {0}`,
-		'Heading 1': t('wysiwyg_options.h1'),
-		'Heading 2': t('wysiwyg_options.h2'),
-		'Heading 3': t('wysiwyg_options.h3'),
-		'Heading 4': t('wysiwyg_options.h4'),
-		'Heading 5': t('wysiwyg_options.h5'),
-		'Heading 6': t('wysiwyg_options.h6'),
-		'Align center': t('wysiwyg_options.aligncenter'),
-		'Align left': t('wysiwyg_options.alignleft'),
-		'Align right': t('wysiwyg_options.alignright'),
-		Justify: t('wysiwyg_options.alignjustify'),
-		'No alignment': t('wysiwyg_options.alignnone'),
-		'Increase indent': t('wysiwyg_options.indent'),
-		'Decrease indent': t('wysiwyg_options.outdent'),
-		'Numbered list': t('wysiwyg_options.numlist'),
-		'Bullet list': t('wysiwyg_options.bullist'),
-		'Text color {0}': `${t('wysiwyg_options.forecolor')} {0}`,
-		'Background color {0}': `${t('wysiwyg_options.backcolor')} {0}`,
-		'Clear formatting': t('wysiwyg_options.removeformat'),
-		Cut: t('wysiwyg_options.cut'),
-		Copy: t('wysiwyg_options.copy'),
-		Paste: t('wysiwyg_options.paste'),
-		Remove: t('wysiwyg_options.remove'),
-		'Select all': t('wysiwyg_options.selectall'),
-		Blockquote: t('wysiwyg_options.blockquote'),
-		Fullscreen: t('wysiwyg_options.fullscreen'),
-		Table: t('wysiwyg_options.table'),
-		'Horizontal line': t('wysiwyg_options.hr'),
-		'Visual aids': t('wysiwyg_options.visualaid'),
-		'Left to right': t('left_to_right'),
-		'Right to left': t('right_to_left'),
-	});
+/*
+ * Registered synchronously rather than in `onMounted`: child hooks run before the parent's,
+ * so <Editor> would already have called `tinymce.init()` - and TinyMCE only skips fetching a
+ * language pack when `I18n.hasCode(code)` is already true. Registering late made it request
+ * `<route>/langs/<locale>.js`, which the App's catch-all answers with index.html, producing an
+ * `Unexpected token '<'` on every mount. None of the packs are bundled, so this is the only
+ * source of these strings.
+ */
+tinymce.addI18n(locale.value, {
+	Undo: t('wysiwyg_options.undo'),
+	Redo: t('wysiwyg_options.redo'),
+	Bold: t('wysiwyg_options.bold'),
+	Italic: t('wysiwyg_options.italic'),
+	Underline: t('wysiwyg_options.underline'),
+	Strikethrough: t('wysiwyg_options.strikethrough'),
+	Subscript: t('wysiwyg_options.subscript'),
+	Superscript: t('wysiwyg_options.superscript'),
+	'Font {0}': `${t('wysiwyg_options.fontselect')} {0}`,
+	'Font size {0}': `${t('wysiwyg_options.fontsizeselect')} {0}`,
+	'Heading 1': t('wysiwyg_options.h1'),
+	'Heading 2': t('wysiwyg_options.h2'),
+	'Heading 3': t('wysiwyg_options.h3'),
+	'Heading 4': t('wysiwyg_options.h4'),
+	'Heading 5': t('wysiwyg_options.h5'),
+	'Heading 6': t('wysiwyg_options.h6'),
+	'Align center': t('wysiwyg_options.aligncenter'),
+	'Align left': t('wysiwyg_options.alignleft'),
+	'Align right': t('wysiwyg_options.alignright'),
+	Justify: t('wysiwyg_options.alignjustify'),
+	'No alignment': t('wysiwyg_options.alignnone'),
+	'Increase indent': t('wysiwyg_options.indent'),
+	'Decrease indent': t('wysiwyg_options.outdent'),
+	'Numbered list': t('wysiwyg_options.numlist'),
+	'Bullet list': t('wysiwyg_options.bullist'),
+	'Text color {0}': `${t('wysiwyg_options.forecolor')} {0}`,
+	'Background color {0}': `${t('wysiwyg_options.backcolor')} {0}`,
+	'Clear formatting': t('wysiwyg_options.removeformat'),
+	Cut: t('wysiwyg_options.cut'),
+	Copy: t('wysiwyg_options.copy'),
+	Paste: t('wysiwyg_options.paste'),
+	Remove: t('wysiwyg_options.remove'),
+	'Select all': t('wysiwyg_options.selectall'),
+	Blockquote: t('wysiwyg_options.blockquote'),
+	Fullscreen: t('wysiwyg_options.fullscreen'),
+	Table: t('wysiwyg_options.table'),
+	'Horizontal line': t('wysiwyg_options.hr'),
+	'Visual aids': t('wysiwyg_options.visualaid'),
+	'Left to right': t('left_to_right'),
+	'Right to left': t('right_to_left'),
 });
 
 const menuActive = computed(

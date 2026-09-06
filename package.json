@@ -1,6 +1,6 @@
 {
 	"name": "directus-extension-wysiwyg-belkins",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Standalone copy of the Directus WYSIWYG (rich text HTML) interface, powered by TinyMCE",
 	"icon": "format_quote",
 	"license": "BUSL-1.1",
